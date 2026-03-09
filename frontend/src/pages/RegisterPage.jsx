@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 bg-ink mb-4">
             <BookOpen size={22} className="text-gold" />
           </div>
-          <h1 className="font-display text-3xl text-ink mb-1">Papers CIE</h1>
+          <h1 className="font-display text-3xl text-ink mb-1">PaperBot</h1>
           <p className="text-sm text-ink/40">Create your account</p>
         </div>
 
