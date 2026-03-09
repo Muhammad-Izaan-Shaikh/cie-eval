@@ -26,6 +26,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
+        "https://papers-cie.onrender.com",   # your frontend Render URL"
     ],
     allow_credentials=True,
     allow_methods=["*"],
