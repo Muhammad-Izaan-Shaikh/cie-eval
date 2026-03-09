@@ -19,14 +19,16 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false          # Set manually in Render dashboard after frontend deploys
+      - key: QWEN_API_KEY
+        sync: false          # Set manually
       - key: OPENAI_API_KEY
         sync: false          # Set manually
       - key: ANTHROPIC_API_KEY
         sync: false          # Set manually
       - key: AI_PROVIDER
-        value: openai        # Change to "anthropic" if preferred
+        value: qwen        # Change to "anthropic" if preferred
       - key: AI_MODEL
-        value: gpt-4o
+        value: qwen3.5-plus
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
@@ -44,7 +46,7 @@ services:
 
   # ── Frontend (React + Nginx) ───────────────────────────────────────────────
   - type: web
-    name: cie-evaluator-frontend
+    name: papers-cie
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
