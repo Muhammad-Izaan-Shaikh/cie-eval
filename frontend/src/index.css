@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-parchment font-body text-ink antialiased;
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-ink;
+  }
+
+  input, textarea {
+    @apply font-body;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ink text-parchment px-5 py-2.5 text-sm tracking-wide
+           hover:bg-ink-light transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply border border-ink/30 text-ink px-5 py-2.5 text-sm tracking-wide
+           hover:bg-ink/5 transition-colors duration-200
+           disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply bg-crimson text-white px-5 py-2.5 text-sm tracking-wide
+           hover:bg-crimson-light transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white border border-ink/10 shadow-paper;
+  }
+
+  .input-field {
+    @apply w-full border border-ink/20 bg-white px-3 py-2 text-sm text-ink
+           focus:outline-none focus:border-ink/60 transition-colors duration-200
+           placeholder:text-ink/30;
+  }
+
+  .label {
+    @apply block text-xs tracking-widest uppercase text-ink/50 mb-1.5;
+  }
+
+  .badge {
+    @apply inline-block px-2 py-0.5 text-xs tracking-wide;
+  }
+
+  .badge-gold {
+    @apply badge bg-gold/20 text-gold border border-gold/30;
+  }
+
+  .badge-sage {
+    @apply badge bg-sage/10 text-sage border border-sage/30;
+  }
+
+  .badge-crimson {
+    @apply badge bg-crimson/10 text-crimson border border-crimson/20;
+  }
+
+  .badge-slate {
+    @apply badge bg-slate/10 text-slate border border-slate/20;
+  }
+
+  .divider {
+    @apply border-t border-ink/10;
+  }
+
+  .prose-cie {
+    @apply text-sm leading-relaxed text-ink/80;
+  }
+
+  .page-title {
+    @apply font-display text-3xl text-ink tracking-tight;
+  }
+
+  .section-title {
+    @apply font-display text-lg text-ink;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 18, 8, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 18, 8, 0.35);
+}
