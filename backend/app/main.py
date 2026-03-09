@@ -1,12 +1,13 @@
 import logging
 import sys
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
 from app.routers import auth, papers, questions, answers
 from app.database import engine, Base
+from app.config import settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,18 +17,20 @@ logging.basicConfig(
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="CIE Exam Evaluator API",
-    version="1.0.0",
-)
+app = FastAPI(title="CIE Exam Evaluator API", version="1.0.0")
+
+# Build CORS origins list — always include localhost for local dev,
+# plus any FRONTEND_URL set via env var (e.g. the Render frontend URL)
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in origins:
+    origins.append(settings.FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://papers-cie.onrender.com",   # your frontend Render URL"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

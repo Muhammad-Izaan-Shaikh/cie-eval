@@ -1,8 +1,14 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
+// On Render: VITE_API_URL = https://your-backend.onrender.com
+// Locally:   falls back to /api (proxied by nginx/vite)
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}`
+  : '/api'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -20,7 +26,6 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    // Don't retry auth endpoints to avoid infinite loops
     if (
       error.response?.status === 401 &&
       !original._retry &&
@@ -31,7 +36,9 @@ api.interceptors.response.use(
       const { refreshToken, setTokens, logout } = useAuthStore.getState()
       if (refreshToken) {
         try {
-          const res = await axios.post('/api/auth/refresh', { refresh_token: refreshToken })
+          const res = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          })
           const { access_token, refresh_token } = res.data
           setTokens(access_token, refresh_token)
           original.headers.Authorization = `Bearer ${access_token}`
@@ -48,8 +55,6 @@ api.interceptors.response.use(
 )
 
 // Auth
-// Note: me() accepts an optional token so the login page can pass the token
-// directly without waiting for the Zustand store to update (avoids race condition)
 export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
