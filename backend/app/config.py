@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     AI_MODEL: str = "qwen3.5-plus"
     QWEN_API_KEY: Optional[str] = None
     QWEN_BASE_URL: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-
+    
+    RESEND_API_KEY: Optional[str] = None
     MAX_FILE_SIZE_MB: int = 50
     UPLOAD_DIR: str = "uploads"
     AI_RATE_LIMIT_PER_MINUTE: int = 10
