@@ -1,0 +1,61 @@
+# Render Blueprint — deploys backend + frontend as Docker services
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend (FastAPI) ──────────────────────────────────────────────────────
+  - type: web
+    name: cie-evaluator-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cie-evaluator-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false          # Set manually in Render dashboard after frontend deploys
+      - key: OPENAI_API_KEY
+        sync: false          # Set manually
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Set manually
+      - key: AI_PROVIDER
+        value: openai        # Change to "anthropic" if preferred
+      - key: AI_MODEL
+        value: gpt-4o
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: MAX_FILE_SIZE_MB
+        value: "50"
+      - key: UPLOAD_DIR
+        value: /app/uploads
+
+  # ── Frontend (React + Nginx) ───────────────────────────────────────────────
+  - type: web
+    name: cie-evaluator-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        sync: false          # Set to https://cie-evaluator-backend.onrender.com
+
+# ── PostgreSQL Database ────────────────────────────────────────────────────
+databases:
+  - name: cie-evaluator-db
+    plan: free
+    databaseName: cie_evaluator
+    user: cie_user
