@@ -24,7 +24,7 @@ export default function Layout() {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen size={18} className="text-gold" />
-            <span className="font-display text-base tracking-wide">CIE Evaluator</span>
+            <span className="font-display text-base tracking-wide">Papers CIE</span>
           </div>
 
           <nav className="flex items-center gap-6">
@@ -73,7 +73,7 @@ export default function Layout() {
       {/* Footer */}
       <footer className="border-t border-ink/10 py-4">
         <div className="max-w-6xl mx-auto px-6 text-center text-xs text-ink/30">
-          CIE Evaluator — AI-assisted Cambridge exam practice
+          Papers CIE — AI-assisted Cambridge exam practice
         </div>
       </footer>
     </div>
