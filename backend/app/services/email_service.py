@@ -1,20 +1,15 @@
 """
-Email service — two strategies:
-1. Resend HTTPS API  — works on Render free tier (SMTP is blocked)
-2. SMTP (Gmail)      — works locally only
-Falls back to console logging if neither configured.
+Email service — uses Resend API via httpx (avoids Cloudflare 1010 block
+that affects raw urllib on Render's IPs).
 
-RESEND SETUP (free, 100 emails/day):
-  1. Sign up at resend.com
-  2. Create an API key
-  3. Set RESEND_API_KEY env var on Render
-  4. Set EMAIL_FROM to: onboarding@resend.dev  (works without domain verification)
-     Or verify your own domain and use that.
+SETUP:
+  1. Sign up at resend.com (free, 100 emails/day)
+  2. Get API key from dashboard
+  3. Set on Render backend env vars:
+       RESEND_API_KEY = re_xxxxxxxxxxxx
+       EMAIL_FROM     = onboarding@resend.dev   (no domain verification needed)
 """
 import logging
-import urllib.request
-import urllib.error
-import json
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -30,7 +25,7 @@ def _build_html(verify_url: str) -> str:
   <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px;">
     <h1 style="font-size: 22px; color: #1a1a1a; margin: 0 0 16px 0;">Verify your email</h1>
     <p style="color: #555; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
-      Welcome to Papers CIE. Click the button below to verify your email address.
+      Welcome to PaperBot. Click the button below to verify your email address.
     </p>
     <a href="{verify_url}" style="display:inline-block;padding:12px 32px;background:#1a1a1a;color:white;text-decoration:none;font-size:14px;letter-spacing:0.5px;">
       Verify Email Address
@@ -47,39 +42,38 @@ def _build_html(verify_url: str) -> str:
 
 
 def _send_via_resend(to_email: str, verify_url: str) -> bool:
-    """Send via Resend HTTPS API — works on Render free tier."""
-    # Use Resend's shared test domain if no custom EMAIL_FROM is set.
-    # "onboarding@resend.dev" works without domain verification but
-    # can only send to the account owner's email on the free plan.
-    from_addr = settings.EMAIL_FROM or "onboarding@resend.dev"
-    from_label = f"Papers CIE <{from_addr}>"
-
-    payload = json.dumps({
-        "from": from_label,
-        "to": [to_email],
-        "subject": "Verify your Papers CIE account",
-        "html": _build_html(verify_url),
-        "text": f"Verify your email address:\n\n{verify_url}",
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+    """Send via Resend API using httpx — avoids Cloudflare 1010 block."""
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            body = resp.read().decode()
-            logger.info(f"Resend API success for {to_email}: {body}")
-            return True
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        logger.error(f"Resend API HTTP {e.code} for {to_email}: {body}")
+        import httpx
+    except ImportError:
+        logger.error("httpx not installed — cannot use Resend API")
         return False
+
+    from_addr = settings.EMAIL_FROM or "onboarding@resend.dev"
+
+    try:
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json",
+                "User-Agent": "cie-evaluator/1.0",
+            },
+            json={
+                "from": f"PaperBot <{from_addr}>",
+                "to": [to_email],
+                "subject": "Verify your PaperBot account",
+                "html": _build_html(verify_url),
+                "text": f"Verify your email address:\n\n{verify_url}",
+            },
+            timeout=15,
+        )
+        if response.status_code in (200, 201):
+            logger.info(f"Resend email sent to {to_email}: {response.text}")
+            return True
+        else:
+            logger.error(f"Resend API error {response.status_code} for {to_email}: {response.text}")
+            return False
     except Exception as e:
         logger.error(f"Resend request failed: {e}")
         return False
@@ -88,8 +82,8 @@ def _send_via_resend(to_email: str, verify_url: str) -> bool:
 def _send_via_smtp(to_email: str, verify_url: str) -> bool:
     """Send via SMTP — works locally, blocked on Render free tier."""
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Verify your Papers CIE account"
-    msg["From"] = f"Papers CIE <{settings.EMAIL_FROM}>"
+    msg["Subject"] = "Verify your PaperBot account"
+    msg["From"] = f"PaperBot <{settings.EMAIL_FROM}>"
     msg["To"] = to_email
     msg.attach(MIMEText(f"Verify your email: {verify_url}", "plain"))
     msg.attach(MIMEText(_build_html(verify_url), "html"))
@@ -114,20 +108,16 @@ def _send_via_smtp(to_email: str, verify_url: str) -> bool:
 def send_verification_email(email: str, token: str) -> bool:
     verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
 
-    # Always log the URL so you can verify manually if email fails
     logger.warning("=" * 60)
     logger.warning(f"VERIFICATION LINK FOR {email}:")
     logger.warning(verify_url)
     logger.warning("=" * 60)
 
-    # Strategy 1: Resend API (use on Render — SMTP is blocked there)
     if settings.RESEND_API_KEY:
         return _send_via_resend(email, verify_url)
 
-    # Strategy 2: SMTP (use locally)
     if settings.SMTP_USER and settings.SMTP_PASSWORD:
         return _send_via_smtp(email, verify_url)
 
-    # Strategy 3: Console only — link is in logs above
-    logger.warning("No email provider configured. Copy the link above to verify.")
+    logger.warning("No email provider configured. Copy the link above to verify manually.")
     return True

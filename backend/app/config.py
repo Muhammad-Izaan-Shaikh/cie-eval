@@ -11,9 +11,9 @@ class Settings(BaseSettings):
 
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    EMAIL_FROM: str = "noreply@cie-evaluator.com"
+    SMTP_USER: str = "izaanshaikh7804@gmail.com"
+    SMTP_PASSWORD: str = "uzbb cbck kixs jgbq"
+    EMAIL_FROM: str = "onboarding@resend.dev"
     FRONTEND_URL: str = "http://localhost:3000"
 
     OPENAI_API_KEY: Optional[str] = None
